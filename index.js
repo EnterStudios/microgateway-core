@@ -44,13 +44,22 @@ Gateway.prototype.stop = function(cb){
   gateway.stop(cb);
 }
 
-const gatherConfig = function()
+const gatherPluginConfigForProxy = function(name, proxy) {
+  let config = configService.get();
+  var pluginConfig = {};
+  Object.keys(config.scopes).forEach( (scope) => {
+    if (scope == proxy.scope) {
+      pluginConfig = config.scopes[scope][name];
+    }
+  })
+  return _.merge({}, config[name] || {}, pluginConfig);
+}
 
 Gateway.prototype.addPlugin = function (proxy, name, plugin) {
   assert(name,"plugin must have a name")
   assert(_.isString(name),"name must be a string");
   assert(_.isFunction(plugin),"plugin must be a function(config,logger,stats){return {onresponse:function(req,res,data,next){}}}");
-  const handler = this.pluginLoader.loadPluginForProxy({plugin:plugin, pluginName:name, config: gatherConfig(), proxy: proxy});
+  const handler = this.pluginLoader.loadPluginForProxy({plugin:plugin, pluginName:name, proxy: proxy}, gatherPluginConfigForProxy(name, proxy));
   var pluginMapKey = proxy.scope + '_' + proxy.proxy_name;
   if (!this.plugins[pluginMapKey]) {
     this.plugins[pluginMapKey] = [];
