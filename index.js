@@ -17,13 +17,12 @@ var _ = require('lodash');
  * @param cb callback when started
  */
 var Gateway = function (config) {
-  assert(config, 'options must contain config')
-  config.uid = uuid.v1()
+  assert(config, 'Gateway must be instantiated with a config');
+  config.uid = uuid.v1();
   configService.init(config);
-  logging.init()
-  this.plugins = [];
+  logging.init();
+  this.plugins = {};
   this.pluginLoader = pluginsLib();
-
 };
 
 module.exports = function (config) {
@@ -31,12 +30,10 @@ module.exports = function (config) {
 }
 
 Gateway.prototype.start = function (cb) {
-  const logger =logging.getLogger();
-  const config = configService.get();
-  let plugins  = this.plugins;
   debug('starting edgemicro');
-  //debug('loaded config ' + util.inspect(config, {colors: true}));
-  gateway.start( plugins, function (err, server) {
+  debug('loaded config ' + util.inspect(configService.get(), {colors: true}));
+  console.log("Plugins is: ****\n", this.plugins);
+  gateway.start(this.plugins, function (err, server) {
     if (err) {
       console.error('error starting edge micro', err);
     }
@@ -48,11 +45,15 @@ Gateway.prototype.stop = function(cb){
   gateway.stop(cb);
 }
 
-Gateway.prototype.addPlugin = function (name,plugin) {
+Gateway.prototype.addPlugin = function (proxy, name, plugin) {
   assert(name,"plugin must have a name")
   assert(_.isString(name),"name must be a string");
   assert(_.isFunction(plugin),"plugin must be a function(config,logger,stats){return {onresponse:function(req,res,data,next){}}}");
-  const handler = this.pluginLoader.loadPlugin({plugin:plugin,pluginName:name});
-  this.plugins.push(handler);
+  const handler = this.pluginLoader.loadPluginForProxy({plugin:plugin, pluginName:name, proxy: proxy});
+  var pluginMapKey = proxy.scope + '_' + proxy.proxy_name;
+  if (!this.plugins[pluginMapKey]) {
+    this.plugins[pluginMapKey] = [];
+  }
+  this.plugins[pluginMapKey].push(handler);
 };
 
