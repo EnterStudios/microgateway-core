@@ -8,22 +8,13 @@ const restify = require('restify')
 const should = require('should')
 const fs = require('fs');
 
-const gatewayPort = 8800
+const gatewayPort = 8000
 const port = 3300
-const baseConfig = {
-  edgemicro: {
-    port: gatewayPort,
-    logging: { level: 'info', dir: './tests/log' },
-    ssl: {
-      key: './tests/server.key',
-      cert: './tests/server.crt'    
-    }
-  },
-  proxies: [
-    { base_path: '/v1', secure: false, url: 'http://localhost:' + port }
-  ]
-}
-
+const baseConfig = require('./baseConfig');
+baseConfig.system.ssl = {
+  key: './tests/server.key',
+  cert: './tests/server.crt' 
+};
 var gateway
 var server
 
@@ -74,7 +65,8 @@ describe('test ssl configuration handling', () => {
               rejectUnauthorized: false,
               url: 'https://localhost:' + gatewayPort + '/v1'
             }, (err, r, body) => {
-              assert(!err, err)
+              console.log(err);
+              assert.ok(!err)
               assert.equal('OK', body)
               done()
             })

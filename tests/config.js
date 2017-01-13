@@ -10,7 +10,7 @@ const should = require('should')
 const gatewayPort = 8000
 const port = 3300
 const baseConfig = require('./baseConfig.js');
-console.log(baseConfig);
+
 var gateway
 var server
 
@@ -46,26 +46,22 @@ describe('test configuration handling', () => {
 
   describe('headers', () => {
     describe('host', () => {
-      it.only('false (default value)', (done) => {
+      it('false (default value)', (done) => {
         startGateway(baseConfig, (req, res, next) => {
+          console.log('Req:', req.url);
           assert.equal('localhost:' + port, req.headers.host)
           res.end('OK')
         }, () => {
-          console.log('startGateway cb');
           gateway.start((err) => {
-            console.log('here2');
             assert.ok(!err)
-            console.log('here3');
             request({
               method: 'GET',
               url: 'http://localhost:' + gatewayPort + '/v1'
             }, (err, r, body) => {
 
-              console.log('here4');
               console.log(err);
               assert.ok(!err)
               assert.equal('OK', body)
-              console.log('here5');
               done()
             })
           })
