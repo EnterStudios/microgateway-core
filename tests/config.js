@@ -7,18 +7,10 @@ const request = require('request')
 const restify = require('restify')
 const should = require('should')
 
-const gatewayPort = 8800
+const gatewayPort = 8000
 const port = 3300
-const baseConfig = {
-  edgemicro: {
-    port: gatewayPort,
-    logging: { level: 'info', dir: './tests/log' }
-  },
-  proxies: [
-    { base_path: '/v1', secure: false, url: 'http://localhost:' + port }
-  ]
-}
-
+const baseConfig = require('./baseConfig.js');
+console.log(baseConfig);
 var gateway
 var server
 
@@ -54,20 +46,26 @@ describe('test configuration handling', () => {
 
   describe('headers', () => {
     describe('host', () => {
-      it('false (default value)', (done) => {
+      it.only('false (default value)', (done) => {
         startGateway(baseConfig, (req, res, next) => {
           assert.equal('localhost:' + port, req.headers.host)
           res.end('OK')
         }, () => {
+          console.log('startGateway cb');
           gateway.start((err) => {
-            assert(!err, err)
-
+            console.log('here2');
+            assert.ok(!err)
+            console.log('here3');
             request({
               method: 'GET',
               url: 'http://localhost:' + gatewayPort + '/v1'
             }, (err, r, body) => {
-              assert(!err, err)
+
+              console.log('here4');
+              console.log(err);
+              assert.ok(!err)
               assert.equal('OK', body)
+              console.log('here5');
               done()
             })
           })
