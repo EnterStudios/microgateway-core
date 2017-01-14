@@ -11,7 +11,7 @@ describe('logging', function() {
   var message = 'log_message';
   var config = {
     uid: process.pid,
-    edgemicro: {
+    system: {
       port: 8000,
       logging: {
         level: 'info',
@@ -29,20 +29,20 @@ describe('logging', function() {
   });
   it('none', function(done) {
     var logging = require('../lib/logging');
-    var level = config.edgemicro.logging.level;
-    config.edgemicro.logging.level = 'none';
+    var level = config.system.logging.level;
+    config.system.logging.level = 'none';
     log.setLevel('none');
     ['info', 'warn', 'error'].forEach(function(level) {
       var text = log[level](message);
       expect(text).to.be.null;
     });
-     config.edgemicro.logging.level = level
+     config.system.logging.level = level
       logging.init(config);
     log = logging.getLogger();
     done();
   });
   it('info', function(done) {
-    config.edgemicro.logging.level = 'info';
+    config.system.logging.level = 'info';
     log.setLevel('info');
     ['info', 'warn', 'error'].forEach(function(level) {
       var text = log[level](message);
@@ -78,7 +78,7 @@ describe('logging', function() {
 
 
   it('error', function(done) {
-    config.edgemicro.logging.level = 'error';
+    config.system.logging.level = 'error';
     log.setLevel('error');
     ['error'].forEach(function(level) {
       var text = log[level](message);

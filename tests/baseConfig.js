@@ -60,7 +60,7 @@ module.exports = {
     "vhosts": {
       "myvhost": {
         "vhost": "localhost:8000",
-        "cert": "./tests/server.crt"
+        "cert": "./tests/server.crt",
         "key": "./tests/server.key"
       }
     }

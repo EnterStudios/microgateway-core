@@ -22,7 +22,7 @@ describe('test lifecycle events', function() {
   }
   var server = serverFactory(bodyMap);
   config = {
-    edgemicro: {
+    system: {
       port: gatewayPort,
       logging: {level: 'info', dir: './tests/log'}
     },
@@ -46,7 +46,7 @@ describe('test lifecycle events', function() {
     done();
   })
 
-  it('POST lifecycle all events run', function (done) {
+  it.only('POST lifecycle all events run', function (done) {
     this.timeout(20000);
     var expectedTypes = ['ondata_request', 'onrequest', 'onend_request', 'onresponse', 'ondata_response', 'onend_response'];
     var types = {};
@@ -59,13 +59,13 @@ describe('test lifecycle events', function() {
       return handler
     });
     gateway.start(function (err) {
-      assert(!err, err);
+      assert.ok(!err);
       request({
         method: "POST",
         url: 'http://localhost:' + gatewayPort + '/v1/echo/post',
         json: {"test": "123"}
       }, (err, r, body) => {
-        assert(!err, err);
+        assert.ok(!err);
         assert.deepEqual(body, {"post": bodyMap['post'], body: {"test": "123"}});//confirm echo and body are returned
         var keys = Object.keys(types);
         assert.deepEqual(keys.sort(), expectedTypes.sort());
