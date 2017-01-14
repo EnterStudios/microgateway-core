@@ -10,7 +10,7 @@ var should = require('should')
 describe('test lifecycle events', function() {
 
   var port = 3300;
-  var gatewayPort = 8800;
+  var gatewayPort = 8000;
   var config = {};
   var gateway;
   var bodyMap = {
@@ -21,15 +21,66 @@ describe('test lifecycle events', function() {
 
   }
   var server = serverFactory(bodyMap);
-  config = {
-    system: {
-      port: gatewayPort,
-      logging: {level: 'info', dir: './tests/log'}
+  config = module.exports = {
+  "scopes": {
+    "1": {
+      "proxies": {
+        "edgemicro_whatsup": {
+          "revision": "15",
+          "proxy_name": "default",
+          "base_path": "/v1",
+          "target_name": "default",
+          "url": "http://localhost:3300/",
+          "PropBUNDLE_LEVEL": "bar1",
+          "PropSCOPE_LEVEL": "foo1",
+          "vhost": "myvhost",
+          "plugins": [
+            "spikearrest"
+          ],
+          "scope": "1"
+        }
+      }
+    }
+  },
+  "proxies": [
+    {
+      "revision": "15",
+      "proxy_name": "default",
+      "base_path": "/v1",
+      "target_name": "default",
+      "url": "http://localhost:3300/",
+      "PropBUNDLE_LEVEL": "bar1",
+      "PropSCOPE_LEVEL": "foo1",
+      "vhost": "myvhost",
+      "plugins": [
+        "spikearrest"
+      ],
+      "scope": "1"
+    }
+  ],
+  "system": {
+    "logging": {
+      "level": "error",
+      "dir": "/var/tmp",
+      "stats_log_interval": 60,
+      "rotate_interval": 24
     },
-    proxies: [
-      {base_path: '/v1', secure: false, url: 'http://localhost:' + port}
-    ]
-  };
+    "port": 8000,
+    "max_connections": 1000,
+    "max_connections_hard": 5000,
+    "restart_sleep": 500,
+    "restart_max": 50,
+    "max_times": 300,
+    "vhosts": {
+      "myvhost": {
+        "vhost": "localhost:8000",
+        "cert": "./tests/server.crt",
+        "key": "./tests/server.key"
+      }
+    }
+  }
+}
+
   beforeEach(function (done) {
     server.listen(port, function () {
       console.log('%s listening at %s', server.name, server.url);
@@ -46,16 +97,18 @@ describe('test lifecycle events', function() {
     done();
   })
 
-  it.only('POST lifecycle all events run', function (done) {
+  it('POST lifecycle all events run', function (done) {
     this.timeout(20000);
     var expectedTypes = ['ondata_request', 'onrequest', 'onend_request', 'onresponse', 'ondata_response', 'onend_response'];
     var types = {};
+
+    
     var testPlugin = TestPlugin(function (type, data, cb) {
       types[type] = true;
       cb();
     });
     var handler = testPlugin.init();
-    gateway.addPlugin('test', function test() {
+    gateway.addPlugin(config.proxies[0], 'test', function test() {
       return handler
     });
     gateway.start(function (err) {
@@ -65,6 +118,7 @@ describe('test lifecycle events', function() {
         url: 'http://localhost:' + gatewayPort + '/v1/echo/post',
         json: {"test": "123"}
       }, (err, r, body) => {
+        
         assert.ok(!err);
         assert.deepEqual(body, {"post": bodyMap['post'], body: {"test": "123"}});//confirm echo and body are returned
         var keys = Object.keys(types);
@@ -86,7 +140,7 @@ describe('test lifecycle events', function() {
       cb();
     });
     var handler = testPlugin.init();
-    gateway.addPlugin('test', function test() { return handler });
+    gateway.addPlugin(config.proxies[0], 'test', function test() { return handler });
     gateway.start(function(err) {
       assert(!err, err);
       request({
@@ -112,7 +166,7 @@ describe('test lifecycle events', function() {
       cb();
     });
     var handler = testPlugin.init();
-    gateway.addPlugin('test', function test() { return handler });
+    gateway.addPlugin(config.proxies[0], 'test', function test() { return handler });
     gateway.start(function(err) {
       assert(!err, err);
       request({ method: "GET", url: 'http://localhost:' + gatewayPort + '/v1/echo/get', json: true }, (err, r, body) => {
@@ -134,7 +188,7 @@ describe('test lifecycle events', function() {
       cb();
     });
     var handler = testPlugin.init()
-    gateway.addPlugin('test', function test() { return handler });
+    gateway.addPlugin(config.proxies[0], 'test', function test() { return handler });
     gateway.start(function(err) {
       assert(!err, err);
       request({
@@ -178,7 +232,7 @@ describe('test lifecycle events', function() {
       next(true, null);
     };
 
-    gateway.addPlugin('test', function test() { return handler });
+    gateway.addPlugin(config.proxies[0], 'test', function test() { return handler });
     gateway.start(function(err) {
       assert(!err, err);
       request({
@@ -215,7 +269,7 @@ describe('test lifecycle events', function() {
       throw new Error("test is barked");
     };
 
-    gateway.addPlugin('test', function test() { return handler });
+    gateway.addPlugin(config.proxies[0], 'test', function test() { return handler });
     gateway.start(function(err) {
       assert(!err, err);
       request({
@@ -251,7 +305,7 @@ describe('test lifecycle events', function() {
       next(new Error("test is borked"));
     };
 
-    gateway.addPlugin('test', function test() { return handler });
+    gateway.addPlugin(config.proxies[0], 'test', function test() { return handler });
     gateway.start(function(err) {
       assert(!err, err);
       request({
@@ -280,7 +334,7 @@ describe('test lifecycle events', function() {
     });
     var handler = testPlugin.init()
     server.close(() => {
-      gateway.addPlugin('test', function test() { return handler });
+      gateway.addPlugin(config.proxies[0], 'test', function test() { return handler });
       gateway.start(function(err) {
         assert(!err, err);
         request({
