@@ -101,7 +101,7 @@ describe('server startup', function () {
 function getConfig(gatewayPort){
   var port = 80;
   return  {
-    edgemicro: {
+    system: {
       port: gatewayPort,
       logging: {level: 'info',dir:'./tests/log'}
 
